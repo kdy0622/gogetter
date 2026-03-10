@@ -101,7 +101,7 @@ export default function App() {
   };
 
   const generateShareText = () => {
-    return `[🔥 유사나 퀀텀점프 GO-GETTER 인증 일지 🔥]\n\n👤 이름/직급: ${profile.name || 'OOO'} / ${profile.rank || 'OOO'}\n📅 날짜: ${currentDate}\n\n✅ 1. 오늘의 기본기 인증\n* 📖 독서: ${inputs.reading.checked ? '완료' : '미완료'} ${inputs.reading.detail ? `(${inputs.reading.detail})` : ''}\n* 🎧 VOD: ${inputs.vod.checked ? '완료' : '미완료'} ${inputs.vod.detail ? `(${inputs.vod.detail})` : ''}\n* 💊 제품애용: ${inputs.product.checked ? '완료' : '미완료'} ${inputs.product.detail ? `(${inputs.product.detail})` : ''}\n* 👥 시스템참석: ${inputs.system.checked ? '완료' : '미완료'} ${inputs.system.detail ? `(${inputs.system.detail})` : ''}\n\n✅ 2. 오늘의 필드 액션\n* 컨택&신뢰쌓기: ${outputs.contact || '없음'}\n* 제품전달&STP: ${outputs.stp || '없음'}\n* 소비자 후속관리: ${outputs.followup || '없음'}\n* 초대&비전미팅: ${outputs.invite || '없음'}\n\n✅ 3. 오늘의 굿뉴스 📢\n* ${journal.goodNews || '없음'}\n\n✅ 4. 오늘의 도전 일지 및 질문 💡\n* 잘한 점: ${journal.goodPoint || '없음'}\n* 아쉬운 점(거절): ${journal.badPoint || '없음'}\n* 스폰서님께 질문: ${journal.question || '없음'}\n\n🔥 내일의 다짐: ${journal.tomorrow || '없음'}`;
+    return `[🔥 유사나 퀀텀점프 GO-GETTER 인증 일지 🔥]\n\n👤 이름/직급: ${profile.name || 'OOO'} / ${profile.rank || 'OOO'}\n📅 날짜: ${currentDate}\n\n✅ 1. 오늘의 기본기 인증\n* 📖 독서: ${inputs.reading.checked ? '완료' : '미완료'} ${inputs.reading.detail ? `(${inputs.reading.detail})` : ''}\n* 🎧 동영상: ${inputs.vod.checked ? '완료' : '미완료'} ${inputs.vod.detail ? `(${inputs.vod.detail})` : ''}\n* 💊 제품애용: ${inputs.product.checked ? '완료' : '미완료'} ${inputs.product.detail ? `(${inputs.product.detail})` : ''}\n* 👥 시스템참석: ${inputs.system.checked ? '완료' : '미완료'} ${inputs.system.detail ? `(${inputs.system.detail})` : ''}\n\n✅ 2. 오늘의 필드 액션\n* 컨택&신뢰쌓기: ${outputs.contact || '없음'}\n* 제품전달&STP: ${outputs.stp || '없음'}\n* 소비자 후속관리: ${outputs.followup || '없음'}\n* 초대&비전미팅: ${outputs.invite || '없음'}\n\n✅ 3. 오늘의 굿뉴스 📢\n* ${journal.goodNews || '없음'}\n\n✅ 4. 오늘의 도전 일지 및 질문 💡\n* 잘한 점: ${journal.goodPoint || '없음'}\n* 아쉬운 점(거절): ${journal.badPoint || '없음'}\n* 스폰서님께 질문: ${journal.question || '없음'}\n\n🔥 내일의 다짐: ${journal.tomorrow || '없음'}`;
   };
 
   const copyToClipboard = async () => {
@@ -213,7 +213,7 @@ export default function App() {
                   {inputs.vod.checked ? <CheckCircle2 className="w-6 h-6 text-blue-600" /> : <div className="w-6 h-6 rounded-full border-2 border-slate-300"></div>}
                 </span>
                 <MonitorPlay className="w-5 h-5" />
-                <span className="text-base font-medium flex-1 text-left">VOD 시청</span>
+                <span className="text-base font-medium flex-1 text-left">동영상 시청</span>
               </button>
               <input 
                 type="text" 
@@ -447,7 +447,7 @@ export default function App() {
                             <p>{selectedEntry.name} / {selectedEntry.rank}</p>
                             <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1">
                                 <p><strong>독서:</strong> {selectedEntry.inputs.reading.checked ? 'O' : 'X'} {selectedEntry.inputs.reading.detail}</p>
-                                <p><strong>VOD:</strong> {selectedEntry.inputs.vod.checked ? 'O' : 'X'} {selectedEntry.inputs.vod.detail}</p>
+                                <p><strong>동영상:</strong> {selectedEntry.inputs.vod.checked ? 'O' : 'X'} {selectedEntry.inputs.vod.detail}</p>
                                 <p><strong>제품:</strong> {selectedEntry.inputs.product.checked ? 'O' : 'X'} {selectedEntry.inputs.product.detail}</p>
                                 <p><strong>시스템:</strong> {selectedEntry.inputs.system.checked ? 'O' : 'X'} {selectedEntry.inputs.system.detail}</p>
                             </div>
