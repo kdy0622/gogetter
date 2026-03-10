@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Zap, RefreshCw, Target, BookOpen, MonitorPlay, HeartPulse, Users, CheckCircle2, Flame, MessageSquare, Info, Copy, Check } from 'lucide-react';
+import { Zap, RefreshCw, Target, BookOpen, MonitorPlay, HeartPulse, Users, CheckCircle2, Flame, MessageSquare, Info, Copy, Check, Save, History, X, Trash2 } from 'lucide-react';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState('');
-  const [profile, setProfile] = useState({ name: '', rank: '' });
+  const [profile, setProfile] = useState({ name: localStorage.getItem('usana_name') || '', rank: localStorage.getItem('usana_rank') || '' });
   const [inputs, setInputs] = useState({
     reading: { checked: false, detail: '' },
     vod: { checked: false, detail: '' },
@@ -25,12 +25,21 @@ export default function App() {
   });
   
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   useEffect(() => {
     const today = new Date();
     const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
     setCurrentDate(formattedDate);
+    fetchHistory();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('usana_name', profile.name);
+    localStorage.setItem('usana_rank', profile.rank);
+  }, [profile]);
 
   const showToast = (message: string, isError = false) => {
     setToast({ show: true, message, isError });
@@ -39,28 +48,56 @@ export default function App() {
     }, 3000);
   };
 
-  const fillDemoData = () => {
-    setProfile({ name: '김성장', rank: '빌더' });
-    setInputs({
-      reading: { checked: true, detail: '하우투 네트워크마케팅 2챕터' },
-      vod: { checked: true, detail: '본사 보상플랜 마스터 강의' },
-      product: { checked: true, detail: '아침 헬스팩, 뉴트리밀 섭취' },
-      system: { checked: true, detail: '팀 저녁 줌미팅 참석' },
+  const fetchHistory = async () => {
+    const response = await fetch('/api/journals');
+    const data = await response.json();
+    setHistory(data);
+  };
+
+  const saveJournal = async () => {
+    const entry = {
+        date: currentDate,
+        name: profile.name,
+        rank: profile.rank,
+        inputs,
+        outputs,
+        journal_data: journal
+    };
+    const response = await fetch('/api/journals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
     });
-    setOutputs({
-      contact: '직장 동료 A에게 안부 카톡 후 주말 약속 잡음',
-      stp: '친구 B에게 3분 마이스토리 후 리셋 프로그램 제안',
-      followup: '지난주 가입한 C고객 호전반응 체크 (어지러움 증상 선제적 안내)',
-      invite: 'D가망사업자 토요일 세미나 초대 멘트 전송 (거절당함)',
-    });
-    setJournal({
-      goodNews: '오랫동안 거절하던 지인이 헬스팩을 먹어보겠다고 마음을 열었습니다!',
-      goodPoint: '두려웠지만 D에게 당당하게 비즈니스를 제안해 본 것',
-      badPoint: 'D가 다단계라며 거절했을 때, 스무스하게 화제 전환을 못하고 당황함',
-      question: '강하게 선입견을 가진 지인에게는 다음 번에 어떤 방식으로 정보를 투척하며 관계를 이어가는게 좋을까요?',
-      tomorrow: '내일은 C고객을 만나서 올바른 섭취법을 직접 다시 보여주겠습니다!',
-    });
-    showToast('💡 예시 데이터가 채워졌습니다.');
+    if (response.ok) {
+        showToast('✅ 일지가 저장되었습니다.');
+        fetchHistory();
+    } else {
+        showToast('❌ 저장에 실패했습니다.', true);
+    }
+  };
+
+  const deleteJournal = async (id: number) => {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      const response = await fetch(`/api/journals/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+          showToast('✅ 일지가 삭제되었습니다.');
+          fetchHistory();
+          setSelectedEntry(null);
+      } else {
+          showToast('❌ 삭제에 실패했습니다.', true);
+      }
+  };
+
+  const refreshPage = () => {
+      setInputs({
+        reading: { checked: false, detail: '' },
+        vod: { checked: false, detail: '' },
+        product: { checked: false, detail: '' },
+        system: { checked: false, detail: '' },
+      });
+      setOutputs({ contact: '', stp: '', followup: '', invite: '' });
+      setJournal({ goodNews: '', goodPoint: '', badPoint: '', question: '', tomorrow: '' });
+      showToast('🔄 페이지가 초기화되었습니다.');
   };
 
   const generateShareText = () => {
@@ -73,7 +110,6 @@ export default function App() {
       await navigator.clipboard.writeText(text);
       showToast('✅ 양식이 클립보드에 복사되었습니다. 팀 단톡방에 붙여넣기 하세요!');
     } catch (err) {
-      // Fallback
       const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
@@ -91,22 +127,28 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 pb-24 font-sans selection:bg-blue-200">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-5 shadow-md sticky top-0 z-10">
+      <header className="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Zap className="w-6 h-6 text-yellow-400 fill-current" />
-              유사나 퀀텀점프 GO-GETTER
+            <h1 className="text-lg font-bold flex flex-col">
+              <span>유사나 퀀텀점프</span>
+              <span className='text-yellow-300'>GO-GETTER</span>
             </h1>
-            <p className="text-blue-200 text-sm mt-1">{currentDate} 실전 일지</p>
+            <p className="text-blue-200 text-xs mt-1">{currentDate} 실전 일지</p>
           </div>
-          <button onClick={fillDemoData} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
-            <RefreshCw className="w-3 h-3" /> 예시 채우기
-          </button>
+          <div className='flex gap-1'>
+            <button onClick={() => setShowHistory(true)} className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-full transition-colors flex items-center gap-0.5">
+                <History className="w-3 h-3" /> 기록
+            </button>
+            <button type="button" onClick={refreshPage} className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-full transition-colors flex items-center gap-0.5">
+                <RefreshCw className="w-3 h-3" /> 초기화
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto p-4 space-y-6 mt-4 sm:mt-8">
+        {/* ... (rest of the UI remains the same) ... */}
         {/* Profile Section */}
         <section className="bg-white rounded-2xl shadow-sm p-5 border border-slate-200">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -363,14 +405,72 @@ export default function App() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
         <div className="max-w-2xl mx-auto flex gap-3">
           <button 
-            onClick={copyToClipboard} 
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+            onClick={saveJournal} 
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-[0.98] shadow-md text-sm"
           >
-            <Copy className="w-5 h-5" />
-            단톡방 공유 양식 복사하기
+            <Save className="w-4 h-4" />
+            저장
+          </button>
+          <button 
+            onClick={copyToClipboard} 
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-[0.98] shadow-md text-sm"
+          >
+            <Copy className="w-4 h-4" />
+            작성일지복사
           </button>
         </div>
       </div>
+
+      {/* History Modal */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center p-4 border-b">
+                    <h2 className="text-lg font-bold">기록 보기</h2>
+                    <button onClick={() => { setShowHistory(false); setSelectedEntry(null); }}><X /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {!selectedEntry ? (
+                        history.map((entry) => (
+                            <div key={entry.id} onClick={() => setSelectedEntry(entry)} className="border p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-slate-50">
+                                <div>
+                                    <p className="font-bold text-sm">{entry.date}</p>
+                                    <p className="text-xs text-slate-500">{entry.name} / {entry.rank}</p>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); deleteJournal(entry.id); }} className="text-red-500 p-2"><Trash2 className="w-4 h-4"/></button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="space-y-3 text-sm">
+                            <button onClick={() => setSelectedEntry(null)} className="text-blue-600 text-xs">← 목록으로</button>
+                            <p className="font-bold text-lg">{selectedEntry.date}</p>
+                            <p>{selectedEntry.name} / {selectedEntry.rank}</p>
+                            <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1">
+                                <p><strong>독서:</strong> {selectedEntry.inputs.reading.checked ? 'O' : 'X'} {selectedEntry.inputs.reading.detail}</p>
+                                <p><strong>VOD:</strong> {selectedEntry.inputs.vod.checked ? 'O' : 'X'} {selectedEntry.inputs.vod.detail}</p>
+                                <p><strong>제품:</strong> {selectedEntry.inputs.product.checked ? 'O' : 'X'} {selectedEntry.inputs.product.detail}</p>
+                                <p><strong>시스템:</strong> {selectedEntry.inputs.system.checked ? 'O' : 'X'} {selectedEntry.inputs.system.detail}</p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1">
+                                <p><strong>컨택:</strong> {selectedEntry.outputs.contact}</p>
+                                <p><strong>STP:</strong> {selectedEntry.outputs.stp}</p>
+                                <p><strong>후속:</strong> {selectedEntry.outputs.followup}</p>
+                                <p><strong>초대:</strong> {selectedEntry.outputs.invite}</p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1">
+                                <p><strong>굿뉴스:</strong> {selectedEntry.journal_data.goodNews}</p>
+                                <p><strong>잘한점:</strong> {selectedEntry.journal_data.goodPoint}</p>
+                                <p><strong>아쉬운점:</strong> {selectedEntry.journal_data.badPoint}</p>
+                                <p><strong>질문:</strong> {selectedEntry.journal_data.question}</p>
+                                <p><strong>다짐:</strong> {selectedEntry.journal_data.tomorrow}</p>
+                            </div>
+                            <button onClick={() => deleteJournal(selectedEntry.id)} className="w-full bg-red-100 text-red-600 py-2 rounded-lg font-bold">삭제하기</button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast.show && (
